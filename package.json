@@ -4,7 +4,8 @@
   "description": "A writable stream for applications that consume blocks",
   "main": "index.js",
   "scripts": {
-    "test": "standard index.js src/*.js test/*.js && nyc tape test/*.js | faucet && nyc report"
+    "test": "standard index.js src/*.js test/*.js && nyc tape test/*.js | faucet && nyc report",
+    "test-browser": "npm run build && test/browser.sh && npm run source"
   },
   "keywords": [
     "webcoin",
