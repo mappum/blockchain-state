@@ -1,5 +1,4 @@
 const { Writable } = require('stream')
-const assign = require('object-assign')
 const old = require('old')
 const sublevel = require('sublevelup')
 const transaction = require('level-transactions')
@@ -13,12 +12,11 @@ class BlockchainState extends Writable {
       throw new Error('Argument "remove" must be a function')
     }
     if (!db) {
-      throw new Error('Argument "db" must be a LevelUP instance')
+      throw new Error('Argument "db" must be a LevelUp instance')
     }
     opts.streamOpts = opts.streamOpts || {}
     opts.streamOpts.objectMode = true
     super(opts.streamOpts)
-    this.opts = opts
 
     this.add = add
     this.remove = remove
@@ -28,7 +26,6 @@ class BlockchainState extends Writable {
     this.dataDb = this.db.sublevel('data')
 
     this.state = null
-    this.start = null
     this.ready = false
 
     this._init(opts)
@@ -44,14 +41,13 @@ class BlockchainState extends Writable {
     return this.state.hash
   }
 
-  getPrevHash () {
-    this._assertReady()
-    return this.state.prevHash
+  getDB () {
+    return this.dataDb
   }
 
-  getStart () {
-    this._assertReady()
-    return this.start
+  onceReady (f) {
+    if (this.ready) return f()
+    this.once('ready', f)
   }
 
   _error (err) {
@@ -63,61 +59,44 @@ class BlockchainState extends Writable {
     throw new Error('BlockchainState is not ready yet (wait for "ready" event)')
   }
 
-  _init (opts) {
-    var ready = (state, start) => {
+  _init () {
+    var ready = (state) => {
       this.state = state
-      this.start = start
       this.ready = true
-      this.emit('ready', state, start)
+      this.emit('ready', state)
     }
-    var loadState = (start) => {
-      this.stateDb.get('height', (err, height) => {
-        if (err && err.notFound) return ready(null, start)
+    this.stateDb.get('height', (err, height) => {
+      if (err && err.notFound) return ready(null)
+      if (err) return this._error(err)
+      this.stateDb.get('hash', { valueEncoding: 'hex' }, (err, hash) => {
         if (err) return this._error(err)
-        this.stateDb.get('hash', { valueEncoding: 'hex' }, (err, hash) => {
-          if (err) return this._error(err)
-          ready({ height: +height, hash }, start)
-        })
+        ready({ height: +height, hash })
       })
-    }
-    this.stateDb.get('start', { valueEncoding: 'json' }, (err, start) => {
-      if (err && !err.notFound) return this._error(err)
-      if (err && err.notFound) {
-        start = assign({
-          time: 0,
-          height: 0,
-          hash: null
-        }, opts.start)
-        this.stateDb.put('start', start, { valueEncoding: 'json' }, (err) => {
-          if (err) return this._error(err)
-          loadState(start)
-        })
-      } else {
-        loadState(start)
-      }
     })
   }
 
-  _transform (block, enc, cb) {
-    if (block.add == null) {
-      return cb(new Error('block must have an "add" property'))
-    }
-    try {
-      this._checkBlockOrder(block)
-    } catch (err) {
-      return cb(err)
-    }
-
-    var tx = transaction(this.dataDb)
-
-    var process = block.add ? this.add : this.remove
-    process.call(this, block, tx, (err) => {
-      if (err) {
-        tx.rollback(err)
+  _write (block, enc, cb) {
+    this.onceReady(() => {
+      if (block.add == null) {
+        return cb(new Error('block must have an "add" property'))
+      }
+      try {
+        this._checkBlockOrder(block)
+      } catch (err) {
         return cb(err)
       }
-      this._updateState(tx, block)
-      tx.commit(cb)
+
+      var tx = transaction(this.dataDb)
+
+      var process = block.add ? this.add : this.remove
+      process.call(this, block, tx, (err) => {
+        if (err) {
+          tx.rollback(err)
+          return cb(err)
+        }
+        this._updateState(tx, block)
+        tx.commit(cb)
+      })
     })
   }
 
