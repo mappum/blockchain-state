@@ -40,7 +40,7 @@ state.getHash(function (err, hash) {
 ----
 #### `new BlockchainState(add, remove, db, [opts])`
 
-Creates a `BlockchainState` which can process blocks. `BlockchainState` is a writable stream, and expects an input of blocks in the format output by [`chain.createReadStream()`]() from the [`blockchain-spv`](https://github.com/mappum/blockchain-spv) module.
+Creates a `BlockchainState` which can process blocks. `BlockchainState` is a writable stream, and expects an input of blocks in the format output by [`chain.createReadStream()`](https://github.com/mappum/blockchain-spv#chaincreatereadstreamopts) from the [`blockchain-spv`](https://github.com/mappum/blockchain-spv) module.
 
 `add(block, tx, cb)` should be a function which will be called every time a new block should be processed. The arguments passed to it are:
 - `block`: the block to be processed
