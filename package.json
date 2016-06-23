@@ -1,7 +1,7 @@
 {
   "name": "blockchain-state",
   "version": "0.0.0",
-  "description": "Create a transform stream that takes blocks as input",
+  "description": "A writable stream that consumes blocks and stores the sync position",
   "main": "index.js",
   "scripts": {
     "test": "standard index.js src/*.js test/*.js && nyc tape test/*.js | faucet && nyc report"
