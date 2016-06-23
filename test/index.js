@@ -87,8 +87,8 @@ test('loading state', function (t) {
     t.plan(4)
     state.once('add', function () {
       t.pass('block added to state')
-      t.ok(state.getHeight(), 123, 'state height is 123')
-      t.equal(state.getHash().toString('hex'),
+      t.ok(state.state.height, 123, 'state height is 123')
+      t.equal(state.state.hash.toString('hex'),
         Buffer(32).fill('a').toString('hex'),
         'state hash is correct')
     })
@@ -112,8 +112,8 @@ test('loading state', function (t) {
       t.pass('"ready" event emitted')
       t.equal(state.ready, true, 'state.ready is true')
       t.notEqual(state.state, null, 'state.state is not null')
-      t.equal(state.getHeight(), 123, 'state height is 123')
-      t.equal(state.getHash().toString('hex'),
+      t.equal(state.state.height, 123, 'state height is 123')
+      t.equal(state.state.hash.toString('hex'),
         Buffer(32).fill('a').toString('hex'),
         'state hash is correct')
       t.equal(_state, state.state, 'state emitted in event')
@@ -133,13 +133,13 @@ test('block order', function (t) {
 
   t.test('write first blocks', function (t) {
     state.once('add', function () {
-      t.equal(state.getHeight(), 0, 'state height is correct')
-      t.equal(state.getHash().toString('hex'),
+      t.equal(state.state.height, 0, 'state height is correct')
+      t.equal(state.state.hash.toString('hex'),
         Buffer(32).fill(0).toString('hex'),
         'state hash is correct')
       state.once('add', function () {
-        t.equal(state.getHeight(), 1, 'state height is correct')
-        t.equal(state.getHash().toString('hex'),
+        t.equal(state.state.height, 1, 'state height is correct')
+        t.equal(state.state.hash.toString('hex'),
           Buffer(32).fill(1).toString('hex'),
           'state hash is correct')
         t.end()
@@ -165,8 +165,8 @@ test('block order', function (t) {
 
   t.test('write third block', function (t) {
     state.once('add', function () {
-      t.equal(state.getHeight(), 2, 'state height is correct')
-      t.equal(state.getHash().toString('hex'),
+      t.equal(state.state.height, 2, 'state height is correct')
+      t.equal(state.state.hash.toString('hex'),
         Buffer(32).fill(2).toString('hex'),
         'state hash is correct')
       t.end()
@@ -186,8 +186,8 @@ test('block order', function (t) {
       t.fail('should not have emitted "add"')
     })
     state.once('remove', function () {
-      t.equal(state.getHeight(), 1, 'state height is correct')
-      t.equal(state.getHash().toString('hex'),
+      t.equal(state.state.height, 1, 'state height is correct')
+      t.equal(state.state.hash.toString('hex'),
         Buffer(32).fill(1).toString('hex'),
         'state hash is correct')
       t.end()
@@ -306,17 +306,14 @@ test('ready', function (t) {
     })
   })
 
-  t.test('call get* methods before ready', function (t) {
+  t.test('call getHash before ready', function (t) {
     var db = createDb()
     var state = new BlockchainState(add, remove, db)
-    try {
-      var height = state.getHeight()
-      t.notOk(height != null, 'should have thrown error')
-    } catch (err) {
-      t.ok(err, 'error thrown')
-      t.equal(err.message, 'BlockchainState is not ready yet (wait for "ready" event)', 'correct error message')
-    }
-    t.end()
+    state.getHash(function (err, hash) {
+      t.error(err, 'no error')
+      t.equal(hash, null, 'got hash')
+      t.end()
+    })
   })
 })
 
