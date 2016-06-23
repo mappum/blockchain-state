@@ -31,14 +31,10 @@ class BlockchainState extends Writable {
     this._init(opts)
   }
 
-  getHeight () {
-    this._assertReady()
-    return this.state.height
-  }
-
-  getHash () {
-    this._assertReady()
-    return this.state.hash
+  getHash (cb) {
+    this.onceReady(() => {
+      cb(null, this.state ? this.state.hash : null)
+    })
   }
 
   getDB () {
@@ -52,11 +48,6 @@ class BlockchainState extends Writable {
 
   _error (err) {
     if (err) this.emit('error', err)
-  }
-
-  _assertReady () {
-    if (this.ready) return
-    throw new Error('BlockchainState is not ready yet (wait for "ready" event)')
   }
 
   _init () {
