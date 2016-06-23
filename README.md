@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.org/mappum/blockchain-state.svg?branch=master)](https://travis-ci.org/mappum/blockchain-state)
 [![Dependency Status](https://david-dm.org/mappum/blockchain-state.svg)](https://david-dm.org/mappum/blockchain-state)
 
-**A writable stream that consumes blocks and stores the sync position**
+**A writable stream for applications that consume blocks**
 
 This module should be used whenever you need to process blockchain blocks in order (e.g. wallets or any other application that needs to scan the blockchain). Handling of reorgs (switching from one blockchain fork to another) is simplified, and block sync progress is stored in a LevelUp database.
 
