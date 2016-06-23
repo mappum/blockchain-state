@@ -113,7 +113,7 @@ class BlockchainState extends Writable {
     var actualHash = block.add ? block.header.prevHash : block.header.getHash()
     var expectedHash = this.state.hash
     if (!actualHash.equals(expectedHash)) {
-      throw new Error('Got block with incorrect hash. Expected ' +
+      throw new Error(`Got block with incorrect ${block.add ? 'prevH' : 'h'}ash. Expected ` +
         `"${expectedHash.toString('hex')}" but got ` +
         `"${actualHash.toString('hex')}"`)
     }
