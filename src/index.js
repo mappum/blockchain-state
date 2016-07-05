@@ -59,7 +59,7 @@ class BlockchainState extends Writable {
     this.stateDb.get('height', (err, height) => {
       if (err && err.notFound) return ready(null)
       if (err) return this._error(err)
-      this.stateDb.get('hash', { valueEncoding: 'hex' }, (err, hash) => {
+      this.stateDb.get('hash', { valueEncoding: 'binary' }, (err, hash) => {
         if (err) return this._error(err)
         ready({ height: +height, hash })
       })
@@ -117,7 +117,7 @@ class BlockchainState extends Writable {
     tx.put('height', height, { prefix: this.stateDb })
     tx.put('hash', hash, {
       prefix: this.stateDb,
-      valueEncoding: 'hex'
+      valueEncoding: 'binary'
     })
   }
 }
