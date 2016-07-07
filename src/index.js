@@ -82,11 +82,19 @@ class BlockchainState extends Writable {
         return cb(err)
       }
 
-      var tx = this.tx || transaction(this.dataDb, { ttl: 240 * 1000 })
+      var tx = this.tx || transaction(this.dataDb)
 
       var commit = (cb) => {
+        tx.put('height', this.state.height, { prefix: this.stateDb })
+        tx.put('hash', this.state.hash, {
+          prefix: this.stateDb,
+          valueEncoding: 'binary'
+        })
         this.tx = null
-        this.commitTimeout = null
+        if (this.commitTimeout) {
+          clearTimeout(this.commitTimeout)
+          this.commitTimeout = null
+        }
         tx.commit(cb)
       }
       var rollback = (err) => {
@@ -113,7 +121,7 @@ class BlockchainState extends Writable {
         if (err) return rollback(err)
         this._updateState(tx, block)
         var elapsed = Date.now() - this.periodStart
-        if (this.interval === 0 || elapsed > this.interval) {
+        if (this.interval === 0 || elapsed >= this.interval) {
           commit(cb)
         } else {
           cb(null)
@@ -145,11 +153,6 @@ class BlockchainState extends Writable {
     var height = block.add ? block.height : block.height - 1
     var hash = block.add ? block.header.getHash() : block.header.prevHash
     this.state = { height, hash }
-    tx.put('height', height, { prefix: this.stateDb })
-    tx.put('hash', hash, {
-      prefix: this.stateDb,
-      valueEncoding: 'binary'
-    })
   }
 }
 
