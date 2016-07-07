@@ -1,6 +1,6 @@
 {
   "name": "blockchain-state",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A writable stream for applications that consume blocks",
   "main": "index.js",
   "scripts": {
