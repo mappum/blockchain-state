@@ -18,6 +18,11 @@ class BlockchainState extends Writable {
     opts.streamOpts.objectMode = true
     super(opts.streamOpts)
 
+    this.interval = opts.interval != null ? opts.interval : 1000
+    this.commitTimeout = null
+    this.periodStart = null
+    this.processing = false
+
     this.add = add
     this.remove = remove
 
@@ -77,16 +82,42 @@ class BlockchainState extends Writable {
         return cb(err)
       }
 
-      var tx = transaction(this.dataDb)
+      var tx = this.tx || transaction(this.dataDb, { ttl: 240 * 1000 })
+
+      var commit = (cb) => {
+        this.tx = null
+        this.commitTimeout = null
+        tx.commit(cb)
+      }
+      var rollback = (err) => {
+        tx.rollback(err)
+        this.tx = null
+        if (this.commitTimeout) clearTimeout(this.commitTimeout)
+        this.commitTimeout = null
+        cb(err)
+      }
+
+      if (this.interval && !this.commitTimeout) {
+        this.tx = tx
+        this.periodStart = Date.now()
+        this.commitTimeout = setTimeout(() => {
+          if (this.processing) return
+          commit(this._error.bind(this))
+        }, this.interval)
+      }
 
       var process = block.add ? this.add : this.remove
+      this.processing = true
       process.call(this, block, tx, (err) => {
-        if (err) {
-          tx.rollback(err)
-          return cb(err)
-        }
+        this.processing = false
+        if (err) return rollback(err)
         this._updateState(tx, block)
-        tx.commit(cb)
+        var elapsed = Date.now() - this.periodStart
+        if (this.interval === 0 || elapsed > this.interval) {
+          commit(cb)
+        } else {
+          cb(null)
+        }
       })
     })
   }
