@@ -72,7 +72,7 @@ test('loading state', function (t) {
   var state
   var db = createDb()
   t.test('initialize new state', function (t) {
-    state = new BlockchainState(add, remove, db)
+    state = new BlockchainState(add, remove, db, { interval: 0 })
     t.equal(state.ready, false, 'state.ready is false')
     state.once('ready', function (_state) {
       t.pass('"ready" event emitted')
@@ -106,7 +106,7 @@ test('loading state', function (t) {
   })
 
   t.test('load existing state', function (t) {
-    var state = new BlockchainState(add, remove, db)
+    var state = new BlockchainState(add, remove, db, { interval: 0 })
     t.equal(state.ready, false, 'state.ready is false')
     state.once('ready', function (_state) {
       t.pass('"ready" event emitted')
