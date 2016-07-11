@@ -8,11 +8,11 @@ function createDb (id) {
 }
 var add = function (block, tx, cb) {
   cb()
-  this.emit('add', block, tx)
+  this.emit('postadd', block, tx)
 }
 var remove = function (block, tx, cb) {
   cb()
-  this.emit('remove', block, tx)
+  this.emit('postremove', block, tx)
 }
 
 test('create BlockchainState', function (t) {
@@ -85,7 +85,7 @@ test('loading state', function (t) {
 
   t.test('write block to state', function (t) {
     t.plan(4)
-    state.once('add', function () {
+    state.once('postadd', function () {
       t.pass('block added to state')
       t.ok(state.state.height, 123, 'state height is 123')
       t.equal(state.state.hash.toString('hex'),
@@ -132,12 +132,12 @@ test('block order', function (t) {
   })
 
   t.test('write first blocks', function (t) {
-    state.once('add', function () {
+    state.once('postadd', function () {
       t.equal(state.state.height, 0, 'state height is correct')
       t.equal(state.state.hash.toString('hex'),
         Buffer(32).fill(0).toString('hex'),
         'state hash is correct')
-      state.once('add', function () {
+      state.once('postadd', function () {
         t.equal(state.state.height, 1, 'state height is correct')
         t.equal(state.state.hash.toString('hex'),
           Buffer(32).fill(1).toString('hex'),
@@ -164,7 +164,7 @@ test('block order', function (t) {
   })
 
   t.test('write third block', function (t) {
-    state.once('add', function () {
+    state.once('postadd', function () {
       t.equal(state.state.height, 2, 'state height is correct')
       t.equal(state.state.hash.toString('hex'),
         Buffer(32).fill(2).toString('hex'),
@@ -182,10 +182,10 @@ test('block order', function (t) {
   })
 
   t.test('remove third block', function (t) {
-    state.once('add', function () {
+    state.once('postadd', function () {
       t.fail('should not have emitted "add"')
     })
-    state.once('remove', function () {
+    state.once('postremove', function () {
       t.equal(state.state.height, 1, 'state height is correct')
       t.equal(state.state.hash.toString('hex'),
         Buffer(32).fill(1).toString('hex'),
@@ -203,7 +203,7 @@ test('block order', function (t) {
   })
 
   t.test('add block with incorrect height', function (t) {
-    state.once('add', function () {
+    state.once('postadd', function () {
       t.fail('should not have emitted "add"')
     })
     state.once('error', function (err) {
@@ -222,10 +222,10 @@ test('block order', function (t) {
   })
 
   t.test('add block with incorrect prevHash', function (t) {
-    state.once('add', function () {
+    state.once('postadd', function () {
       t.fail('should not have emitted "add"')
     })
-    state.once('remove', function () {
+    state.once('postremove', function () {
       t.fail('should not have emitted "remove"')
     })
     state.once('error', function (err) {
@@ -244,10 +244,10 @@ test('block order', function (t) {
   })
 
   t.test('remove block with incorrect height', function (t) {
-    state.once('add', function () {
+    state.once('postadd', function () {
       t.fail('should not have emitted "add"')
     })
-    state.once('remove', function () {
+    state.once('postremove', function () {
       t.fail('should not have emitted "remove"')
     })
     state.once('error', function (err) {
@@ -266,10 +266,10 @@ test('block order', function (t) {
   })
 
   t.test('remove block with incorrect hash', function (t) {
-    state.once('add', function () {
+    state.once('postadd', function () {
       t.fail('should not have emitted "add"')
     })
-    state.once('remove', function () {
+    state.once('postremove', function () {
       t.fail('should not have emitted "remove"')
     })
     state.once('error', function (err) {
@@ -300,7 +300,7 @@ test('ready', function (t) {
         prevHash: Buffer(32).fill(0)
       }
     })
-    state.once('add', function () {
+    state.once('postadd', function () {
       t.pass('"add" emitted')
       t.end()
     })
