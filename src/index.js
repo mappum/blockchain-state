@@ -120,6 +120,8 @@ class BlockchainState extends Writable {
         this.processing = false
         if (err) return rollback(err)
         this._updateState(tx, block)
+        this.emit('block', block)
+        this.emit(block.add ? 'add' : 'remove', block)
         var elapsed = Date.now() - this.periodStart
         if (this.interval === 0 || elapsed >= this.interval) {
           commit(cb)
